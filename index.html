@@ -54,8 +54,7 @@
     <script src="https://apis.google.com/js/api.js"></script>
     <script>
         // Set your YouTube API Key here
-        const API_KEY = 'AIzaSyDbBz8PO7C58nSa1D-_XRwlOCOlKuKQWxA'; 
-// Replace with your YouTube Data API key
+        const API_KEY = 'AIzaSyDbBz8PO7C58nSa1D-_XRwlOCOlKuKQWxA'; // Replace with your YouTube Data API key
 
         // Function to load the YouTube API client
         function loadClient() {
@@ -69,7 +68,7 @@
         // Load the API client asynchronously
         gapi.load('client', loadClient);
 
-        // Function to search for lofi music from YouTube's Audio Library
+        // Function to search for lofi music from YouTube
         function searchMusic() {
             const query = document.getElementById('searchQuery').value;
             if (!query) {
@@ -77,13 +76,13 @@
                 return;
             }
 
-            // Request to search YouTube Audio Library for lofi music
+            // Request to search YouTube for lofi music videos
             gapi.client.youtube.search.list({
                 part: 'snippet',
                 type: 'video',
                 q: query + ' lofi',
-                videoDuration: 'short',
-                videoCategoryId: '10', // Music category
+                videoDuration: 'short',  // You can add more filters like duration, etc.
+                videoCategoryId: '10',   // Music category
                 maxResults: 10
             }).then((response) => {
                 displayResults(response.result.items);
