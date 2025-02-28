@@ -3,115 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lofi Music Search</title>
+    <title>AI & Anime Illustrations Finder</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
-            background-color: #f0f4f8;
         }
         h1 {
-            text-align: center;
             color: #333;
         }
-        #musicList {
+        input {
+            padding: 10px;
+            width: 60%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
             margin-top: 20px;
         }
-        .music-item {
-            background-color: white;
+        .card {
+            background: white;
             padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: left;
         }
-        .music-item h3 {
-            margin: 0;
-            color: #333;
+        img {
+            width: 100%;
+            border-radius: 5px;
         }
-        .music-item a {
+        .info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .download-btn {
             display: block;
             margin-top: 10px;
-            color: #1a73e8;
+            padding: 5px 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
             text-decoration: none;
+            text-align: center;
         }
-        .music-item a:hover {
-            text-decoration: underline;
+        #loadMore {
+            display: none;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Lofi Music Search</h1>
-    <div>
-        <label for="searchQuery">Search Lofi Music:</label>
-        <input type="text" id="searchQuery" placeholder="Search..." oninput="searchMusic()">
-    </div>
-    
-    <div id="musicList"></div>
+    <h1>AI & Anime Illustrations Finder</h1>
+    <input type="text" id="search" placeholder="Search for AI Illustrations...">
+    <button onclick="fetchImages(true)">Search</button>
+    <div class="grid" id="imageGrid"></div>
+    <button id="loadMore" onclick="fetchImages(false)">Load More</button>
 
-    <script src="https://apis.google.com/js/api.js"></script>
     <script>
-        // Set your YouTube API Key here
-        const API_KEY = 'AIzaSyDbBz8PO7C58nSa1D-_XRwlOCOlKuKQWxA'; // Replace with your YouTube Data API key
-
-        // Function to load the YouTube API client
-        function loadClient() {
-            gapi.client.init({
-                'apiKey': API_KEY,
-            }).then(() => {
-                console.log('YouTube API client loaded');
-            });
-        }
-
-        // Load the API client asynchronously
-        gapi.load('client', loadClient);
-
-        // Function to search for lofi music from YouTube
-        function searchMusic() {
-            const query = document.getElementById('searchQuery').value;
-            if (!query) {
-                document.getElementById('musicList').innerHTML = ''; // Clear results if query is empty
-                return;
-            }
-
-            // Request to search YouTube for lofi music videos
-            gapi.client.youtube.search.list({
-                part: 'snippet',
-                type: 'video',
-                q: query + ' lofi',
-                videoDuration: 'short',  // You can add more filters like duration, etc.
-                videoCategoryId: '10',   // Music category
-                maxResults: 10
-            }).then((response) => {
-                displayResults(response.result.items);
-            }).catch((error) => {
-                console.error('Error fetching data from YouTube API: ', error);
-            });
-        }
-
-        // Function to display the results on the website
-        function displayResults(items) {
-            const musicList = document.getElementById('musicList');
-            musicList.innerHTML = ''; // Clear previous results
-
-            items.forEach((item) => {
-                const musicItem = document.createElement('div');
-                musicItem.classList.add('music-item');
+        let page = 1;
+        
+        async function fetchImages(reset = true) {
+            const apiKey = "48794845-9aaa5e01bcef71cb91adfa849";
+            const query = document.getElementById("search").value || "anime";
+            const url = `https://pixabay.com/api/?key=${apiKey}&q=${query}&image_type=illustration&category=anime&per_page=10&page=${page}&min_width=1920&min_height=1080`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const imageGrid = document.getElementById("imageGrid");
                 
-                const title = document.createElement('h3');
-                title.innerText = item.snippet.title;
+                if (reset) {
+                    imageGrid.innerHTML = "";
+                    page = 1;
+                }
+                
+                data.hits.forEach(img => {
+                    const div = document.createElement("div");
+                    div.className = "card";
+                    div.innerHTML = `
+                        <img src="${img.webformatURL}" alt="${img.tags}">
+                        <p><strong>Tags:</strong> ${img.tags}</p>
+                        <p class="info"><strong>Uploader:</strong> ${img.user}</p>
+                        <p class="info"><strong>Resolution:</strong> ${img.imageWidth}x${img.imageHeight}</p>
+                        <a class="download-btn" href="${img.largeImageURL}" download>Download</a>
+                    `;
+                    imageGrid.appendChild(div);
+                });
+                
+                if (data.hits.length > 0) {
+                    document.getElementById("loadMore").style.display = "block";
+                    page++;
+                } else {
+                    document.getElementById("loadMore").style.display = "none";
+                }
+            } catch (error) {
+                console.error("Error fetching images:", error);
+            }
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI & Anime Illustrations Finder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        input {
+            padding: 10px;
+            width: 60%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .card {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+        img {
+            width: 100%;
+            border-radius: 5px;
+        }
+        .info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .download-btn {
+            display: block;
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+        #loadMore {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI & Anime Illustrations Finder</h1>
+    <input type="text" id="search" placeholder="Search for AI Illustrations...">
+    <button onclick="fetchImages(true)">Search</button>
+    <div class="grid" id="imageGrid"></div>
+    <button id="loadMore" onclick="fetchImages(false)">Load More</button>
 
-                const link = document.createElement('a');
-                link.href = `https://www.youtube.com/watch?v=${item.id.videoId}`;
-                link.target = '_blank';
-                link.innerText = 'Listen on YouTube';
-
-                musicItem.appendChild(title);
-                musicItem.appendChild(link);
-                musicList.appendChild(musicItem);
-            });
+    <script>
+        let page = 1;
+        
+        async function fetchImages(reset = true) {
+            const apiKey = "48794845-9aaa5e01bcef71cb91adfa849";
+            const query = document.getElementById("search").value || "anime";
+            const url = `https://pixabay.com/api/?key=${apiKey}&q=${query}&image_type=illustration&category=anime&per_page=10&page=${page}&min_width=1920&min_height=1080`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const imageGrid = document.getElementById("imageGrid");
+                
+                if (reset) {
+                    imageGrid.innerHTML = "";
+                    page = 1;
+                }
+                
+                data.hits.forEach(img => {
+                    const div = document.createElement("div");
+                    div.className = "card";
+                    div.innerHTML = `
+                        <img src="${img.webformatURL}" alt="${img.tags}">
+                        <p><strong>Tags:</strong> ${img.tags}</p>
+                        <p class="info"><strong>Uploader:</strong> ${img.user}</p>
+                        <p class="info"><strong>Resolution:</strong> ${img.imageWidth}x${img.imageHeight}</p>
+                        <a class="download-btn" href="${img.largeImageURL}" download>Download</a>
+                    `;
+                    imageGrid.appendChild(div);
+                });
+                
+                if (data.hits.length > 0) {
+                    document.getElementById("loadMore").style.display = "block";
+                    page++;
+                } else {
+                    document.getElementById("loadMore").style.display = "none";
+                }
+            } catch (error) {
+                console.error("Error fetching images:", error);
+            }
         }
     </script>
 </body>
